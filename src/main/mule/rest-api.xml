@@ -70,7 +70,7 @@ output application/json
 output application/json
 ---
 {
-	"country": "My Fist payload is" 
+	"country": "My Fist payload i" 
 }]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
