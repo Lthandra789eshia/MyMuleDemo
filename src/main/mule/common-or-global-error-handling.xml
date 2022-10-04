@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="common-or-global-error-handlingError_Handler" doc:id="96e7dc49-6777-48d0-b6e7-1ad90d47ff68" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="de2832e5-eecd-4d24-84ff-e8c0a94d5816" type="HTTP:BAD_GATEWAY, HTTP:BAD_REQUEST, HTTP:CLIENT_SECURITY" >
+			<ee:transform doc:name="Transform Message" doc:id="bcb66442-b0b4-4bd3-a706-bf1fae34b78c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"Error": if(error.errorType == "HTTP:CONNECTIVITY") error.errorType else error.detailedDescription  
+}]]></ee:set-payload>
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="statusCode" ><![CDATA[404]]></ee:set-variable>
+					<ee:set-variable variableName="reasonPhrase" ><![CDATA["Bad requets"]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ebf7939f-f592-4e59-90f6-e983c204ec53" type="NOTWO:VALUE">
+			<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="93e232ea-dc1f-4dba-8386-e8c2f9b29751" />
+		</on-error-continue>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="9b830d4d-4543-4264-abd1-f0c5d54d0c8c" type="EXPRESSION">
+			<set-payload value='#["Its coming from try"]' doc:name="Set Payload" doc:id="d7c68824-d913-4559-8801-06d3dae282b2" />
+		</on-error-continue>
+	</error-handler>
+</mule>
