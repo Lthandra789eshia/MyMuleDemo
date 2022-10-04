@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="errorFlow" doc:id="5a0cc865-55be-4fa1-a07f-b0a26a3a61c1" >
+		<try doc:name="Try" doc:id="52d6cc4e-18b2-4de2-9128-fe76b3e6f85a" >
+			<ee:transform doc:name="Transform Message" doc:id="3c778154-0902-4187-9e09-2f8a0a1626e8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+2/0]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<error-handler>
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="780fcf07-34ba-4283-8d6f-eb773e799157" >
+					<set-payload value='#["print somethin"]' doc:name="Set Payload" doc:id="e6b418d3-2472-48d8-9297-b1d9a770e594" />
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="2d7f7eb8-fcb6-4845-890b-e634b9ba7954" message="#[payload]"/>
+		<set-payload value='#["there might me some error right"]' doc:name="Set Payload" doc:id="a7ee2f23-3fb6-4332-bb72-2382a1f3803a" />
+	</flow>
+	<flow name="rest-apiFlow" doc:id="6bd94852-2c3f-4043-a2ad-4e003b7926af" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="3a38c10d-d0a4-4072-aa9d-34f79bb0e948" path="${http.path}" config-ref="HTTP_Listener_config">
+			<http:error-response statusCode="#[vars.statusCode]" reasonPhrase="#[vars.reasonPhrase]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<set-variable value="#[payload.page]" doc:name="Set Variable" doc:id="22d0fe39-1891-47a2-86c3-fcea2918aff4" variableName="pageNumber"/>
+		<http:request doc:name="Request" doc:id="7b01c292-1b6c-4673-a807-0cd673b46c2a" config-ref="HTTP_Request_configuration" method="${httpReq.method}" url="${httpReq.path1}">
+			<error-mapping targetType="NOTWO:VALUE" />
+			<http:query-params><![CDATA[#[output application/json
+---
+{
+	"page" : vars.pageNumber
+}]]]></http:query-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="74496d09-23ac-444d-afdd-807d76127e19" >
+			<when expression="#[payload.page == 2]">
+				<ee:transform doc:name="Transform Message" doc:id="65753791-575b-455d-b2c1-e0b6d2e404ec">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "value is 2"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error" doc:id="f29030a7-f77f-491a-9a82-006367a22c5d" type="NOTWO:VALUE" description="The page is not 2"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="9a7f0115-368b-468d-a5fc-342b1bc84c58" message='#["Flow ended suucessfully"]'/>
+	</flow>
+	<flow name="rest-apiFlow1" doc:id="6c782392-44f0-479f-9262-bb5ebbcc7d46">
+		<http:listener doc:name="Listener" doc:id="9222c41d-c811-420f-8a16-e4c7aa994cda" config-ref="HTTP_Listener_config" path="${http.path}"/>
+		<set-payload value="#['USA']" doc:name="Set Payload" doc:id="b2009985-8112-42c3-aa81-d02f4275a915" />
+		<flow-ref doc:name="Flow Reference" doc:id="64a079fe-70a0-4bc4-939e-2de10403565e" name="errorFlow" />
+		<scatter-gather doc:name="Scatter-Gather" doc:id="d35824ce-48ec-4c51-8517-415b66a72d76" >
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="80e9f067-0e8c-4289-917a-2cc890e277ff">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"country": "My Fist payload is" 
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="17dd2d26-517e-4692-8027-2272eda4f591">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	country: "My Second payload is" 
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="87381bf9-4ba7-4816-af64-584a93a967fa">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	country: "My Third payload is" 
+}
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="8d54a64d-168a-48f2-a7ba-64aba9cf7e0b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="cdf78856-bcff-42d0-93f0-b5c2b32c6b20" message="#[payload]"/>
+	</flow>
+</mule>

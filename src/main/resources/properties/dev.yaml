@@ -1,0 +1,14 @@
+http:
+  path: "rest"
+  port: "8081"
+  "base-path": "test"
+  
+ 
+  
+httpReq: 
+  host: "reqres.in/api"
+  path: "users"
+  path1: "http://reqres.in/api/users"
+  param: "attributes.queryParams.page"
+  method: "GET"
+  protocol: "HTTP"
